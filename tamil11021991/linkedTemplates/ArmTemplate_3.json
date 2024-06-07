@@ -33,6 +33,142 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/df_customerAddress_Detail')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "AzureSQLDB_Customer",
+								"type": "DatasetReference"
+							},
+							"name": "SalesLTCustomer"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureSqlDB_Address",
+								"type": "DatasetReference"
+							},
+							"name": "SalesLTAddress"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureSqlDB_CustomerAddress",
+								"type": "DatasetReference"
+							},
+							"name": "SalesLTCustomerAddress"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlDB_CustomerAddressDetail",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "join1"
+						},
+						{
+							"name": "join2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CustomerID as integer,",
+						"          NameStyle as boolean,",
+						"          Title as string,",
+						"          FirstName as string,",
+						"          MiddleName as string,",
+						"          LastName as string,",
+						"          Suffix as string,",
+						"          CompanyName as string,",
+						"          SalesPerson as string,",
+						"          EmailAddress as string,",
+						"          Phone as string,",
+						"          PasswordHash as string,",
+						"          PasswordSalt as string,",
+						"          rowguid as string,",
+						"          ModifiedDate as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     limit: 100,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SalesLTCustomer",
+						"source(output(",
+						"          AddressID as integer,",
+						"          AddressLine1 as string,",
+						"          AddressLine2 as string,",
+						"          City as string,",
+						"          StateProvince as string,",
+						"          CountryRegion as string,",
+						"          PostalCode as string,",
+						"          rowguid as string,",
+						"          ModifiedDate as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SalesLTAddress",
+						"source(output(",
+						"          CustomerID as integer,",
+						"          AddressID as integer,",
+						"          AddressType as string,",
+						"          rowguid as string,",
+						"          ModifiedDate as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SalesLTCustomerAddress",
+						"SalesLTCustomerAddress, SalesLTCustomer join(SalesLTCustomerAddress@CustomerID == SalesLTCustomer@CustomerID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1, SalesLTAddress join(SalesLTCustomerAddress@AddressID == SalesLTAddress@AddressID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join2",
+						"join2 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          CustomerID = SalesLTCustomer@CustomerID,",
+						"          FirstName,",
+						"          MiddleName,",
+						"          LastName,",
+						"          Suffix,",
+						"          AddressID = SalesLTAddress@AddressID,",
+						"          AddressLine1,",
+						"          AddressLine2,",
+						"          City,",
+						"          StateProvince,",
+						"          CountryRegion,",
+						"          PostalCode",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Copy_file_in_folder')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1063,102 +1199,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-06-06T06:29:42Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "df_customerAddress_Detail",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SalesLTCustomer": {
-										"TableName": {
-											"value": "@pipeline().parameters.Tbl_Customer",
-											"type": "Expression"
-										},
-										"SchemaName": {
-											"value": "@pipeline().parameters.Schema",
-											"type": "Expression"
-										}
-									},
-									"SalesLTAddress": {
-										"SchemaName": {
-											"value": "@pipeline().parameters.Schema",
-											"type": "Expression"
-										},
-										"TableName": {
-											"value": "@pipeline().parameters.Tbl_Address",
-											"type": "Expression"
-										}
-									},
-									"SalesLTCustomerAddress": {
-										"SchemaName": {
-											"value": "@pipeline().parameters.Schema",
-											"type": "Expression"
-										},
-										"TableName": {
-											"value": "@pipeline().parameters.Tbl_CustomerAddress",
-											"type": "Expression"
-										}
-									},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"Tbl_Customer": {
-						"type": "string",
-						"defaultValue": "Customer"
-					},
-					"Tbl_Address": {
-						"type": "string",
-						"defaultValue": "Address"
-					},
-					"Tbl_CustomerAddress": {
-						"type": "string",
-						"defaultValue": "CustomerAddress"
-					},
-					"Schema": {
-						"type": "string",
-						"defaultValue": "SalesLT"
-					},
-					"Tbl_Destination": {
-						"type": "string",
-						"defaultValue": "CustomerAddressDetail"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-05-31T14:47:37Z"
 			},
 			"dependsOn": []
 		},

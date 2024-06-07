@@ -165,7 +165,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -180,28 +180,79 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "Child_A",
-							"value": {
-								"value": "@pipeline().parameters.Child_param_A",
-								"type": "Expression"
-							}
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "string_v",
+									"value": {
+										"type": "String",
+										"content": "a"
+									}
+								},
+								{
+									"key": "bool_v",
+									"value": {
+										"type": "Boolean",
+										"content": true
+									}
+								},
+								{
+									"key": "Exp_v",
+									"value": {
+										"type": "Expression",
+										"content": "@pipeline().DataFactory"
+									}
+								},
+								{
+									"key": "Array_v",
+									"value": {
+										"type": "Array",
+										"content": [
+											{
+												"type": "String",
+												"content": "1"
+											},
+											{
+												"type": "String",
+												"content": "2"
+											},
+											{
+												"type": "String",
+												"content": "3"
+											},
+											{
+												"type": "String",
+												"content": "4"
+											},
+											{
+												"type": "String",
+												"content": "4"
+											}
+										]
+									}
+								},
+								{
+									"key": "int_v",
+									"value": {
+										"type": "Int",
+										"content": 100
+									}
+								}
+							],
+							"setSystemVariable": true
 						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"Child_param_A": {
-						"type": "array"
-					}
-				},
 				"variables": {
-					"Child_A": {
-						"type": "Array"
+					"a": {
+						"type": "Integer"
 					}
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-05-31T14:47:37Z"
 			},
 			"dependsOn": []
 		},
@@ -455,15 +506,31 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Until1",
-						"description": "itertate 5 times",
-						"type": "Until",
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeline1",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
 						"dependsOn": [
 							{
 								"activity": "Execute Pipeline1",
@@ -472,98 +539,17 @@
 								]
 							}
 						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('counter'),5)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Set counter",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "Set temp",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "counter",
-										"value": {
-											"value": "@variables('temp')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "Set temp",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "temp",
-										"value": {
-											"value": "@add(variables('counter'),1)",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					},
-					{
-						"name": "Execute Pipeline1",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Fail1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
 						"policy": {
+							"secureOutput": false,
 							"secureInput": false
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pipeline3",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"Child_param_A": {
-									"value": "@pipeline().parameters.Tables",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "Fail1",
-						"type": "Fail",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"message": {
-								"value": "@concat( 'Today Date is ',formatDateTime(utcNow()),\n'DayofMonth :',string(dayOfMonth(utcNow())),\n'Dayofweek :',string(dayOfWeek(utcNow())),\n'DayofYear :',string(dayOfYear(utcNow())),\n'startofDay :', string(startOfDay(utcNow())),\n'startofHour :', string(startOfHour(utcNow())),\n'startofMonth :', string(startOfMonth(utcNow())))",
+							"variableName": "a",
+							"value": {
+								"value": "@activity('Execute Pipeline1').output.pipelineReturnValue.int_v",
 								"type": "Expression"
-							},
-							"errorCode": "1"
+							}
 						}
 					}
 				],
@@ -571,28 +557,19 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"Tables": {
-						"type": "array",
-						"defaultValue": [
-							"Customer",
-							"Address"
-						]
+					"Child_param_A": {
+						"type": "array"
 					}
 				},
 				"variables": {
-					"counter": {
-						"type": "Integer",
-						"defaultValue": 0
-					},
-					"temp": {
-						"type": "Integer",
-						"defaultValue": 0
+					"a": {
+						"type": "Integer"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pipeline3')]"
+				"[concat(variables('factoryId'), '/pipelines/pipeline1')]"
 			]
 		},
 		{
