@@ -180,7 +180,18 @@
 					"items": {
 						"value": "@range(0,5)",
 						"type": "Expression"
-					}
+					},
+					"activities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					]
 				}
 			}
 		],
