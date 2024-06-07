@@ -1,0 +1,1389 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "tamil11021991"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_SourcePath": {
+			"type": "string",
+			"defaultValue": "landing/sample"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_DestinationPath": {
+			"type": "string",
+			"defaultValue": "landing/output"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_Source_filename": {
+			"type": "string",
+			"defaultValue": "sample.txt"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath": {
+			"type": "string",
+			"defaultValue": "landing/sample"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath": {
+			"type": "string",
+			"defaultValue": "landing/output"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Copy_file_in_folder')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "copy all the files in a folder to the destination folder",
+				"activities": [
+					{
+						"name": "Get Metadata",
+						"description": "Get the Metadata information of the folder",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_sourefolder",
+								"type": "DatasetReference",
+								"parameters": {
+									"ds_pr_folderpath": {
+										"value": "@pipeline().parameters.PR_sourcepath",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems",
+								"exists",
+								"itemName"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach",
+						"description": "Iterate over the folder child items",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Execute Pipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Copy_file",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"SourcePath": {
+												"value": "@pipeline().parameters.PR_sourcepath",
+												"type": "Expression"
+											},
+											"DestinationPath": {
+												"value": "@pipeline().parameters.PR_destinationpath",
+												"type": "Expression"
+											},
+											"Source_filename": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"PR_sourcepath": {
+						"type": "string",
+						"defaultValue": "landing/sample"
+					},
+					"PR_destinationpath": {
+						"type": "string",
+						"defaultValue": "landing/output"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-28T08:33:39Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Copy_multipleTable_to_file')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_TYPE = 'BASE TABLE' and TABLE_SCHEMA = 'SalesLT' and TABLE_NAME <> 'ProductModel'",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_table",
+								"type": "DatasetReference",
+								"parameters": {
+									"ds_pr_schemaname": "salesLT",
+									"ds_pr_tablename": "customer"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Copy_table_to_file",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": false,
+							"parameters": {
+								"TableList": {
+									"value": "@activity('Lookup1').output.value",
+									"type": "Expression"
+								},
+								"FilePath": {
+									"value": "@pipeline().parameters.Filepath",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Filepath": {
+						"type": "string",
+						"defaultValue": "landing/output"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-30T06:34:00Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DataFlow_Person_ErrorHandling')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Person",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-04T10:16:16Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Foreach_Example')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select s.name as schemaname,t.name as tablename from sys.tables t\ninner join sys.schemas s on t.schema_id=s.schema_id \nwhere t.name like 'customer%'",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureDB_Generic_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"SchemaName": "salesLT",
+									"TableName": "address"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Execute Pipeline",
+									"description": "Foreach_Example_Table_ADLS",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Foreach_Example_Table_ADLS",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"SchemaName": {
+												"value": "@item().schemaname",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@item().tablename",
+												"type": "Expression"
+											},
+											"Directory": {
+												"value": "@item().tablename",
+												"type": "Expression"
+											},
+											"FileName": {
+												"value": "@concat(item().schemaname,item().tablename, formatDateTime(utcNow()),'.csv')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-03T14:13:16Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MasterPipeline_Invoking3Pipes')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline for CustomerCopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table1",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@pipeline().parameters.Table1",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table1,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline for Addresscopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline for CustomerCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table2",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@pipeline().parameters.Table2",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table2,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline for CustomerAddressCopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline for Addresscopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table3",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@pipeline().parameters.Table3",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table3,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Table1": {
+						"type": "string",
+						"defaultValue": "Customer"
+					},
+					"Table2": {
+						"type": "string",
+						"defaultValue": "Product"
+					},
+					"Table3": {
+						"type": "string",
+						"defaultValue": "CustomerAddress"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-05T15:57:38Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MasterPipeline_Invoking3Pipes_DatetimeStamp_Folder')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline for CustomerCopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table1",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@concat(pipeline().parameters.Table1,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table1,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline for Addresscopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline for CustomerCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table2",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@concat(pipeline().parameters.Table2,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table2,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline for CustomerAddressCopy",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline for Addresscopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Foreach_Example_Table_ADLS",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"SchemaName": "salesLT",
+								"TableName": {
+									"value": "@pipeline().parameters.Table3",
+									"type": "Expression"
+								},
+								"Directory": {
+									"value": "@concat(pipeline().parameters.Table3,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+									"type": "Expression"
+								},
+								"FileName": {
+									"value": "@concat(pipeline().parameters.Table3,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Table1": {
+						"type": "string",
+						"defaultValue": "Customer"
+					},
+					"Table2": {
+						"type": "string",
+						"defaultValue": "Product"
+					},
+					"Table3": {
+						"type": "string",
+						"defaultValue": "CustomerAddress"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-05T15:57:38Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MetadataDrivenCopyTask_oem_MiddleLevel')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline will copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+				"activities": [
+					{
+						"name": "DivideOneBatchIntoMultipleGroups",
+						"description": "Divide objects from single batch into multiple sub parallel groups to avoid reaching the output limit of lookup activity.",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(0, add(div(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                    if(equals(mod(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), 0), 0, 1)))",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 50,
+							"activities": [
+								{
+									"name": "GetObjectsPerGroupToCopy",
+									"description": "Get objects (tables etc.) from control table required to be copied in this group. The order of objects to be copied following the TaskId in control table (ORDER BY [TaskId] DESC).",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "WITH OrderedControlTable AS (\n                             SELECT *, ROW_NUMBER() OVER (ORDER BY [TaskId], [Id] DESC) AS RowNumber\n                             FROM @{pipeline().parameters.MainControlTableName}\n                             where TopLevelPipelineName = '@{pipeline().parameters.TopLevelPipelineName}'\n                             and TriggerName like '%@{pipeline().parameters.TriggerName}%' and CopyEnabled = 1)\n                             SELECT * FROM OrderedControlTable WHERE RowNumber BETWEEN @{add(mul(int(item()),pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                             add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch), 1))}\n                             AND @{min(add(mul(int(item()), pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch),\n                             pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity)),\n                            mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, add(pipeline().parameters.CurrentSequentialNumberOfBatch,1)), pipeline().parameters.SumOfObjectsToCopy)}",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "MetadataDrivenCopyTask_oem_ControlDS",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": false
+									}
+								},
+								{
+									"name": "CopyObjectsInOneGroup",
+									"description": "Execute another pipeline to copy objects from one group. The objects belonging to this group will be copied parallelly.",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "GetObjectsPerGroupToCopy",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "MetadataDrivenCopyTask_oem_BottomLevel",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"ObjectsPerGroupToCopy": {
+												"value": "@activity('GetObjectsPerGroupToCopy').output.value",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"MaxNumberOfObjectsReturnedFromLookupActivity": {
+						"type": "Int"
+					},
+					"TopLevelPipelineName": {
+						"type": "String"
+					},
+					"TriggerName": {
+						"type": "String"
+					},
+					"CurrentSequentialNumberOfBatch": {
+						"type": "Int"
+					},
+					"SumOfObjectsToCopy": {
+						"type": "Int"
+					},
+					"SumOfObjectsToCopyForCurrentBatch": {
+						"type": "Int"
+					},
+					"MainControlTableName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "MetadataDrivenCopyTask_oem_20240604"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-04T09:03:53Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Switch-Induvidual_Folder_on_Timestamp')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Use switch to perform copy activity and create a folder structure based on timestamp",
+				"activities": [
+					{
+						"name": "Switch1",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.TableName",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "Customer",
+									"activities": [
+										{
+											"name": "Execute Pipeline for Customer",
+											"type": "ExecutePipeline",
+											"dependsOn": [],
+											"policy": {
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"pipeline": {
+													"referenceName": "Foreach_Example_Table_ADLS",
+													"type": "PipelineReference"
+												},
+												"waitOnCompletion": true,
+												"parameters": {
+													"SchemaName": "salesLT",
+													"TableName": {
+														"value": "@pipeline().parameters.TableName",
+														"type": "Expression"
+													},
+													"Directory": {
+														"value": "@concat(pipeline().parameters.TableName,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+														"type": "Expression"
+													},
+													"FileName": {
+														"value": "@concat(pipeline().parameters.TableName,replace(formatDateTime(utcNow(),'s'),'-',''),'.csv')",
+														"type": "Expression"
+													}
+												}
+											}
+										}
+									]
+								},
+								{
+									"value": "Product",
+									"activities": [
+										{
+											"name": "Execute Pipeline for Product",
+											"type": "ExecutePipeline",
+											"dependsOn": [],
+											"policy": {
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"pipeline": {
+													"referenceName": "Foreach_Example_Table_ADLS",
+													"type": "PipelineReference"
+												},
+												"waitOnCompletion": true,
+												"parameters": {
+													"SchemaName": "salesLT",
+													"TableName": {
+														"value": "@pipeline().parameters.TableName",
+														"type": "Expression"
+													},
+													"Directory": {
+														"value": "@concat(pipeline().parameters.TableName,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+														"type": "Expression"
+													},
+													"FileName": {
+														"value": "@concat(pipeline().parameters.TableName,replace(formatDateTime(utcNow(),'s'),'-',''),'.csv')",
+														"type": "Expression"
+													}
+												}
+											}
+										}
+									]
+								},
+								{
+									"value": "CustomerAddress",
+									"activities": [
+										{
+											"name": "Execute Pipeline for CustomerAddress",
+											"type": "ExecutePipeline",
+											"dependsOn": [],
+											"policy": {
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"pipeline": {
+													"referenceName": "Foreach_Example_Table_ADLS",
+													"type": "PipelineReference"
+												},
+												"waitOnCompletion": true,
+												"parameters": {
+													"SchemaName": "salesLT",
+													"TableName": {
+														"value": "@pipeline().parameters.TableName",
+														"type": "Expression"
+													},
+													"Directory": {
+														"value": "@concat(pipeline().parameters.TableName,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+														"type": "Expression"
+													},
+													"FileName": {
+														"value": "@concat(pipeline().parameters.TableName,replace(formatDateTime(utcNow(),'s'),'-',''),'.csv')",
+														"type": "Expression"
+													}
+												}
+											}
+										}
+									]
+								}
+							],
+							"defaultActivities": [
+								{
+									"name": "Wait1",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [
+										{
+											"name": "Default",
+											"value": "@{pipeline().parameters.TableName}"
+										}
+									],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-04T07:05:19Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Threshold_count_check_Load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Check the thresold value from the file and load the table",
+				"activities": [
+					{
+						"name": "Lookup Thresold File",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "DS_Thresold_File",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Lookup count customer",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select count(*) as cnt from salesLT.Customer",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureDB_Generic_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"SchemaName": "salesLT",
+									"TableName": {
+										"value": "@pipeline().parameters.TableName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "If Condition check FileThresold_greater_CustomerTable",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Lookup Thresold File",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "Lookup count customer",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater( activity('Lookup count customer').output.firstRow.cnt,int(activity('Lookup Thresold File').output.firstRow.Prop_0))",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Execute Pipeline Table_to_JSON",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Copy_Table_to_JSON",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pr_tablename": {
+												"value": "@pipeline().parameters.TableName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string",
+						"defaultValue": "Customer"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-06T06:29:42Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_customerAddress_Detail",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SalesLTCustomer": {
+										"TableName": {
+											"value": "@pipeline().parameters.Tbl_Customer",
+											"type": "Expression"
+										},
+										"SchemaName": {
+											"value": "@pipeline().parameters.Schema",
+											"type": "Expression"
+										}
+									},
+									"SalesLTAddress": {
+										"SchemaName": {
+											"value": "@pipeline().parameters.Schema",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "@pipeline().parameters.Tbl_Address",
+											"type": "Expression"
+										}
+									},
+									"SalesLTCustomerAddress": {
+										"SchemaName": {
+											"value": "@pipeline().parameters.Schema",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "@pipeline().parameters.Tbl_CustomerAddress",
+											"type": "Expression"
+										}
+									},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Tbl_Customer": {
+						"type": "string",
+						"defaultValue": "Customer"
+					},
+					"Tbl_Address": {
+						"type": "string",
+						"defaultValue": "Address"
+					},
+					"Tbl_CustomerAddress": {
+						"type": "string",
+						"defaultValue": "CustomerAddress"
+					},
+					"Schema": {
+						"type": "string",
+						"defaultValue": "SalesLT"
+					},
+					"Tbl_Destination": {
+						"type": "string",
+						"defaultValue": "CustomerAddressDetail"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-31T14:47:37Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TR_Copy_file')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "copy file from source to destination patj",
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Copy_file",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"SourcePath": "[parameters('TR_Copy_file_properties_Copy_file_parameters_SourcePath')]",
+							"DestinationPath": "[parameters('TR_Copy_file_properties_Copy_file_parameters_DestinationPath')]",
+							"Source_filename": "[parameters('TR_Copy_file_properties_Copy_file_parameters_Source_filename')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2024-05-27T12:20:00",
+						"endTime": "2024-05-29T06:37:00",
+						"timeZone": "India Standard Time",
+						"schedule": {
+							"minutes": [
+								15
+							],
+							"hours": [
+								12
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MetadataDrivenCopyTask_oem_TopLevel')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline will count the total number of objects (tables etc.) required to be copied in this run, come up with the number of sequential batches based on the max allowed concurrent copy task, and then execute another pipeline to copy different batches sequentially.",
+				"activities": [
+					{
+						"name": "GetSumOfObjectsToCopy",
+						"description": "Count the total number of objects (tables etc.) required to be copied in this run.",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT count(*) as count FROM @{pipeline().parameters.MainControlTableName} where TopLevelPipelineName='@{pipeline().Pipeline}' and TriggerName like '%@{pipeline().TriggerName}%' and CopyEnabled = 1",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "MetadataDrivenCopyTask_oem_ControlDS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "CopyBatchesOfObjectsSequentially",
+						"description": "Come up with the number of sequential batches based on the max allowed concurrent copy tasks, and then execute another pipeline to copy different batches sequentially.",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetSumOfObjectsToCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(0, add(div(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks),\n                    if(equals(mod(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks), 0), 0, 1)))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyObjectsInOneBatch",
+									"description": "Execute another pipeline to copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "MetadataDrivenCopyTask_oem_MiddleLevel",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"MaxNumberOfObjectsReturnedFromLookupActivity": {
+												"value": "@pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity",
+												"type": "Expression"
+											},
+											"TopLevelPipelineName": {
+												"value": "@{pipeline().Pipeline}",
+												"type": "Expression"
+											},
+											"TriggerName": {
+												"value": "@{pipeline().TriggerName}",
+												"type": "Expression"
+											},
+											"CurrentSequentialNumberOfBatch": {
+												"value": "@item()",
+												"type": "Expression"
+											},
+											"SumOfObjectsToCopy": {
+												"value": "@activity('GetSumOfObjectsToCopy').output.firstRow.count",
+												"type": "Expression"
+											},
+											"SumOfObjectsToCopyForCurrentBatch": {
+												"value": "@min(pipeline().parameters.MaxNumberOfConcurrentTasks, activity('GetSumOfObjectsToCopy').output.firstRow.count)",
+												"type": "Expression"
+											},
+											"MainControlTableName": {
+												"value": "@pipeline().parameters.MainControlTableName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"MaxNumberOfObjectsReturnedFromLookupActivity": {
+						"type": "Int",
+						"defaultValue": 5000
+					},
+					"MaxNumberOfConcurrentTasks": {
+						"type": "Int",
+						"defaultValue": 20
+					},
+					"MainControlTableName": {
+						"type": "String",
+						"defaultValue": "dbo.MainControlTable_oem"
+					}
+				},
+				"folder": {
+					"name": "MetadataDrivenCopyTask_oem_20240604"
+				},
+				"annotations": [
+					"MetadataDrivenSolution"
+				],
+				"lastPublishTime": "2024-06-04T09:03:53Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/MetadataDrivenCopyTask_oem_MiddleLevel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TR_copy_file_in_folder')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Copy_file_in_folder",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"PR_sourcepath": "[parameters('TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath')]",
+							"PR_destinationpath": "[parameters('TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2024-05-28T06:42:00",
+						"endTime": "2024-05-29T06:42:00",
+						"timeZone": "India Standard Time",
+						"schedule": {
+							"minutes": [
+								6
+							],
+							"hours": [
+								14
+							],
+							"weekDays": [
+								"Tuesday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Copy_file_in_folder')]"
+			]
+		}
+	]
+}

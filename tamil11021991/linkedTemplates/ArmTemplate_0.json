@@ -1,0 +1,1180 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "tamil11021991"
+		},
+		"LS_Azure_SQLDB_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Azure_SQLDB'"
+		},
+		"ls_dev_adls_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_dev_adls'"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "tamil11021991.database.windows.net"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "tamil11021991db"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "tamil"
+		},
+		"ls_azuresqldb_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "tamil11021991.database.windows.net"
+		},
+		"ls_azuresqldb_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_pr_databasename}"
+		},
+		"ls_azuresqldb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_pr_username}"
+		},
+		"ls_dev_adls_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://thamizhdevadlssa.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Set_variable')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Filter",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Append variable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('Files')",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@greater(int(item()),3)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set variable",
+						"description": "set variable [files]",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Files",
+							"value": [
+								"1",
+								"2",
+								"3",
+								"4",
+								"5"
+							]
+						}
+					},
+					{
+						"name": "Append variable",
+						"type": "AppendVariable",
+						"dependsOn": [
+							{
+								"activity": "Set variable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Files",
+							"value": "6"
+						}
+					},
+					{
+						"name": "Until1",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Filter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Filter').output.value,6)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Fail1",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@string(activity('Filter').output.value)",
+											"type": "Expression"
+										},
+										"errorCode": "1"
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"Files": {
+						"type": "Array"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-29T11:32:37Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Child_A",
+							"value": {
+								"value": "@pipeline().parameters.Child_param_A",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Child_param_A": {
+						"type": "array"
+					}
+				},
+				"variables": {
+					"Child_A": {
+						"type": "Array"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Azure_SQLDB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_Azure_SQLDB_properties_typeProperties_server')]",
+					"database": "[parameters('LS_Azure_SQLDB_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"hostNameInCertificate": "",
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_Azure_SQLDB_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Azure_SQLDB_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_azuresqldb')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"ls_pr_databasename": {
+						"type": "string",
+						"defaultValue": "tamil11021991db"
+					},
+					"ls_pr_username": {
+						"type": "string",
+						"defaultValue": "tamil"
+					},
+					"ls_pr_password": {
+						"type": "string",
+						"defaultValue": "MayFlower@2024"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_azuresqldb_properties_typeProperties_server')]",
+					"database": "[parameters('ls_azuresqldb_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"hostNameInCertificate": "",
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_azuresqldb_properties_typeProperties_userName')]",
+					"password": "@{linkedService().ls_pr_password}"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_dev_adls')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "thamizhdevadlssa",
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_dev_adls_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_dev_adls_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Insert_log_blob_on_create')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Makes a log entry in log_blob_delete",
+				"activities": [
+					{
+						"name": "Script1",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_azuresqldb",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"ls_pr_databasename": {
+									"value": "@pipeline().parameters.PR_Databasename",
+									"type": "Expression"
+								},
+								"ls_pr_username": "tamil",
+								"ls_pr_password": "MayFlower@2024"
+							}
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"parameters": [
+										{
+											"name": "filename",
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.PR_filename",
+												"type": "Expression"
+											},
+											"direction": "Input"
+										},
+										{
+											"name": "deleted_time",
+											"type": "Datetime",
+											"value": {
+												"value": "@pipeline().parameters.PR_Deletetime",
+												"type": "Expression"
+											},
+											"direction": "Input"
+										}
+									],
+									"type": "Query",
+									"text": {
+										"value": "insert into log_blob_deleted values ( @filename,@deleted_time)",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"PR_filename": {
+						"type": "string"
+					},
+					"PR_Deletetime": {
+						"type": "string"
+					},
+					"PR_Databasename": {
+						"type": "string",
+						"defaultValue": "tamil11021991db"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-28T14:00:55Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Insert_log_blob_on_delete')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Makes a log entry in log_blob_delete",
+				"activities": [
+					{
+						"name": "Script1",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_azuresqldb",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"ls_pr_databasename": {
+									"value": "@pipeline().parameters.PR_Databasename",
+									"type": "Expression"
+								},
+								"ls_pr_username": "tamil",
+								"ls_pr_password": "MayFlower@2024"
+							}
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"parameters": [
+										{
+											"name": "filename",
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.PR_filename",
+												"type": "Expression"
+											},
+											"direction": "Input"
+										},
+										{
+											"name": "deleted_time",
+											"type": "Datetime",
+											"value": {
+												"value": "@pipeline().parameters.PR_Deletetime",
+												"type": "Expression"
+											},
+											"direction": "Input"
+										}
+									],
+									"type": "Query",
+									"text": {
+										"value": "insert into log_blob_deleted values ( @filename,@deleted_time)",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"PR_filename": {
+						"type": "string"
+					},
+					"PR_Deletetime": {
+						"type": "string"
+					},
+					"PR_Databasename": {
+						"type": "string",
+						"defaultValue": "tamil11021991db"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-28T14:12:46Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Until1",
+						"description": "itertate 5 times",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(variables('counter'),5)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Set counter",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set temp",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "counter",
+										"value": {
+											"value": "@variables('temp')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set temp",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "temp",
+										"value": {
+											"value": "@add(variables('counter'),1)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Fail1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeline3",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"Child_param_A": {
+									"value": "@pipeline().parameters.Tables",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Fail1",
+						"type": "Fail",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"message": {
+								"value": "@concat( 'Today Date is ',formatDateTime(utcNow()),\n'DayofMonth :',string(dayOfMonth(utcNow())),\n'Dayofweek :',string(dayOfWeek(utcNow())),\n'DayofYear :',string(dayOfYear(utcNow())),\n'startofDay :', string(startOfDay(utcNow())),\n'startofHour :', string(startOfHour(utcNow())),\n'startofMonth :', string(startOfMonth(utcNow())))",
+								"type": "Expression"
+							},
+							"errorCode": "1"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Tables": {
+						"type": "array",
+						"defaultValue": [
+							"Customer",
+							"Address"
+						]
+					}
+				},
+				"variables": {
+					"counter": {
+						"type": "Integer",
+						"defaultValue": 0
+					},
+					"temp": {
+						"type": "Integer",
+						"defaultValue": 0
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_Blob')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_dev_adls",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "landing"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_CSV_Generic_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_dev_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_CSV_Generic_Dest_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_dev_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Directory": {
+						"type": "string"
+					},
+					"FileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_CSV_PipeDelimited_Generic_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_dev_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": "|",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_JSON_Generic_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_dev_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"CustomerID": {
+							"type": "integer"
+						},
+						"Title": {
+							"type": "string"
+						},
+						"FirstName": {
+							"type": "string"
+						},
+						"MiddleName": {
+							"type": "string"
+						},
+						"LastName": {
+							"type": "string"
+						},
+						"Suffix": {
+							"type": "string"
+						},
+						"CompanyName": {
+							"type": "string"
+						},
+						"SalesPerson": {
+							"type": "string"
+						},
+						"EmailAddress": {
+							"type": "string"
+						},
+						"Phone": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDB_Generic_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSQLDB_Customer')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string",
+						"defaultValue": "Customer"
+					},
+					"SchemaName": {
+						"type": "string",
+						"defaultValue": "SalesLT"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "CustomerID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "NameStyle",
+						"type": "bit"
+					},
+					{
+						"name": "Title",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "MiddleName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Suffix",
+						"type": "nvarchar"
+					},
+					{
+						"name": "CompanyName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SalesPerson",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmailAddress",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone",
+						"type": "nvarchar"
+					},
+					{
+						"name": "PasswordHash",
+						"type": "varchar"
+					},
+					{
+						"name": "PasswordSalt",
+						"type": "varchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDB_Address')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "AddressID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "AddressLine1",
+						"type": "nvarchar"
+					},
+					{
+						"name": "AddressLine2",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "StateProvince",
+						"type": "nvarchar"
+					},
+					{
+						"name": "CountryRegion",
+						"type": "nvarchar"
+					},
+					{
+						"name": "PostalCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDB_CustomerAddress')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "CustomerID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "AddressID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "AddressType",
+						"type": "nvarchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDB_CustomerAddressDetail')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "CustomerAddressDetail"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"parameters": {
+					"Schema": {
+						"type": "String"
+					},
+					"TableName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().Schema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Person"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		}
+	]
+}

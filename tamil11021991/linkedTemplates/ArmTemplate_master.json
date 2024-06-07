@@ -1,0 +1,256 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "tamil11021991"
+		},
+		"LS_Azure_SQLDB_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Azure_SQLDB'"
+		},
+		"ls_dev_adls_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_dev_adls'"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "tamil11021991.database.windows.net"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "tamil11021991db"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "tamil"
+		},
+		"ls_azuresqldb_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "tamil11021991.database.windows.net"
+		},
+		"ls_azuresqldb_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_pr_databasename}"
+		},
+		"ls_azuresqldb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_pr_username}"
+		},
+		"ls_dev_adls_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://thamizhdevadlssa.dfs.core.windows.net/"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_SourcePath": {
+			"type": "string",
+			"defaultValue": "landing/sample"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_DestinationPath": {
+			"type": "string",
+			"defaultValue": "landing/output"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_Source_filename": {
+			"type": "string",
+			"defaultValue": "sample.txt"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath": {
+			"type": "string",
+			"defaultValue": "landing/sample"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath": {
+			"type": "string",
+			"defaultValue": "landing/output"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename": {
+			"type": "string",
+			"defaultValue": "@triggerBody().fileName"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Deletetime": {
+			"type": "string",
+			"defaultValue": "@trigger().startTime"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Databasename": {
+			"type": "string",
+			"defaultValue": "tamil11021991db"
+		},
+		"TR_on_blob_create_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/3aea52c1-30dd-4e3b-b526-06e19cd1a6a1/resourceGroups/ADE-DEV/providers/Microsoft.Storage/storageAccounts/thamizhdevadlssa"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_filename": {
+			"type": "string",
+			"defaultValue": "@triggerBody().fileName"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Deletetime": {
+			"type": "string",
+			"defaultValue": "@trigger().startTime"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Databasename": {
+			"type": "string",
+			"defaultValue": "tamil11021991db"
+		},
+		"TR_on_blob_delete_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/3aea52c1-30dd-4e3b-b526-06e19cd1a6a1/resourceGroups/ADE-DEV/providers/Microsoft.Storage/storageAccounts/thamizhdevadlssa"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "tamil11021991_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_Azure_SQLDB_password": {
+						"value": "[parameters('LS_Azure_SQLDB_password')]"
+					},
+					"ls_dev_adls_accountKey": {
+						"value": "[parameters('ls_dev_adls_accountKey')]"
+					},
+					"LS_Azure_SQLDB_properties_typeProperties_server": {
+						"value": "[parameters('LS_Azure_SQLDB_properties_typeProperties_server')]"
+					},
+					"LS_Azure_SQLDB_properties_typeProperties_database": {
+						"value": "[parameters('LS_Azure_SQLDB_properties_typeProperties_database')]"
+					},
+					"LS_Azure_SQLDB_properties_typeProperties_userName": {
+						"value": "[parameters('LS_Azure_SQLDB_properties_typeProperties_userName')]"
+					},
+					"ls_azuresqldb_properties_typeProperties_server": {
+						"value": "[parameters('ls_azuresqldb_properties_typeProperties_server')]"
+					},
+					"ls_azuresqldb_properties_typeProperties_database": {
+						"value": "[parameters('ls_azuresqldb_properties_typeProperties_database')]"
+					},
+					"ls_azuresqldb_properties_typeProperties_userName": {
+						"value": "[parameters('ls_azuresqldb_properties_typeProperties_userName')]"
+					},
+					"ls_dev_adls_properties_typeProperties_url": {
+						"value": "[parameters('ls_dev_adls_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "tamil11021991_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "tamil11021991_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename": {
+						"value": "[parameters('TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename')]"
+					},
+					"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Deletetime": {
+						"value": "[parameters('TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Deletetime')]"
+					},
+					"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Databasename": {
+						"value": "[parameters('TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Databasename')]"
+					},
+					"TR_on_blob_create_properties_typeProperties_scope": {
+						"value": "[parameters('TR_on_blob_create_properties_typeProperties_scope')]"
+					},
+					"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_filename": {
+						"value": "[parameters('TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_filename')]"
+					},
+					"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Deletetime": {
+						"value": "[parameters('TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Deletetime')]"
+					},
+					"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Databasename": {
+						"value": "[parameters('TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Databasename')]"
+					},
+					"TR_on_blob_delete_properties_typeProperties_scope": {
+						"value": "[parameters('TR_on_blob_delete_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "tamil11021991_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"TR_Copy_file_properties_Copy_file_parameters_SourcePath": {
+						"value": "[parameters('TR_Copy_file_properties_Copy_file_parameters_SourcePath')]"
+					},
+					"TR_Copy_file_properties_Copy_file_parameters_DestinationPath": {
+						"value": "[parameters('TR_Copy_file_properties_Copy_file_parameters_DestinationPath')]"
+					},
+					"TR_Copy_file_properties_Copy_file_parameters_Source_filename": {
+						"value": "[parameters('TR_Copy_file_properties_Copy_file_parameters_Source_filename')]"
+					},
+					"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath": {
+						"value": "[parameters('TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath')]"
+					},
+					"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath": {
+						"value": "[parameters('TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_2')]"
+			]
+		}
+	]
+}

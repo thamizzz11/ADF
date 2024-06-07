@@ -1,0 +1,75 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "tamil11021991"
+		},
+		"LS_Azure_SQLDB_password": {
+			"value": ""
+		},
+		"ls_dev_adls_accountKey": {
+			"value": ""
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_server": {
+			"value": "tamil11021991.database.windows.net"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_database": {
+			"value": "tamil11021991db"
+		},
+		"LS_Azure_SQLDB_properties_typeProperties_userName": {
+			"value": "tamil"
+		},
+		"ls_azuresqldb_properties_typeProperties_server": {
+			"value": "tamil11021991.database.windows.net"
+		},
+		"ls_azuresqldb_properties_typeProperties_database": {
+			"value": "@{linkedService().ls_pr_databasename}"
+		},
+		"ls_azuresqldb_properties_typeProperties_userName": {
+			"value": "@{linkedService().ls_pr_username}"
+		},
+		"ls_dev_adls_properties_typeProperties_url": {
+			"value": "https://thamizhdevadlssa.dfs.core.windows.net/"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_SourcePath": {
+			"value": "landing/sample"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_DestinationPath": {
+			"value": "landing/output"
+		},
+		"TR_Copy_file_properties_Copy_file_parameters_Source_filename": {
+			"value": "sample.txt"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath": {
+			"value": "landing/sample"
+		},
+		"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_destinationpath": {
+			"value": "landing/output"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename": {
+			"value": "@triggerBody().fileName"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Deletetime": {
+			"value": "@trigger().startTime"
+		},
+		"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_Databasename": {
+			"value": "tamil11021991db"
+		},
+		"TR_on_blob_create_properties_typeProperties_scope": {
+			"value": "/subscriptions/3aea52c1-30dd-4e3b-b526-06e19cd1a6a1/resourceGroups/ADE-DEV/providers/Microsoft.Storage/storageAccounts/thamizhdevadlssa"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_filename": {
+			"value": "@triggerBody().fileName"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Deletetime": {
+			"value": "@trigger().startTime"
+		},
+		"TR_on_blob_delete_properties_Insert_log_blob_on_delete_parameters_PR_Databasename": {
+			"value": "tamil11021991db"
+		},
+		"TR_on_blob_delete_properties_typeProperties_scope": {
+			"value": "/subscriptions/3aea52c1-30dd-4e3b-b526-06e19cd1a6a1/resourceGroups/ADE-DEV/providers/Microsoft.Storage/storageAccounts/thamizhdevadlssa"
+		}
+	}
+}
