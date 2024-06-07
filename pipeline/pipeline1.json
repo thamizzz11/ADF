@@ -3,82 +3,81 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Data flow1",
-				"type": "ExecuteDataFlow",
+				"name": "Set variable1",
+				"type": "SetVariable",
 				"dependsOn": [],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "df_customerAddress_Detail",
-						"type": "DataFlowReference",
-						"datasetParameters": {
-							"SalesLTCustomer": {
-								"TableName": {
-									"value": "@pipeline().parameters.Tbl_Customer",
-									"type": "Expression"
-								},
-								"SchemaName": {
-									"value": "@pipeline().parameters.Schema",
-									"type": "Expression"
-								}
-							},
-							"SalesLTAddress": {
-								"SchemaName": {
-									"value": "@pipeline().parameters.Schema",
-									"type": "Expression"
-								},
-								"TableName": {
-									"value": "@pipeline().parameters.Tbl_Address",
-									"type": "Expression"
-								}
-							},
-							"SalesLTCustomerAddress": {
-								"SchemaName": {
-									"value": "@pipeline().parameters.Schema",
-									"type": "Expression"
-								},
-								"TableName": {
-									"value": "@pipeline().parameters.Tbl_CustomerAddress",
-									"type": "Expression"
-								}
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "string_v",
+							"value": {
+								"type": "String",
+								"content": "a"
+							}
+						},
+						{
+							"key": "bool_v",
+							"value": {
+								"type": "Boolean",
+								"content": true
+							}
+						},
+						{
+							"key": "Exp_v",
+							"value": {
+								"type": "Expression",
+								"content": "@pipeline().DataFactory"
+							}
+						},
+						{
+							"key": "Array_v",
+							"value": {
+								"type": "Array",
+								"content": [
+									{
+										"type": "String",
+										"content": "1"
+									},
+									{
+										"type": "String",
+										"content": "2"
+									},
+									{
+										"type": "String",
+										"content": "3"
+									},
+									{
+										"type": "String",
+										"content": "4"
+									},
+									{
+										"type": "String",
+										"content": "4"
+									}
+								]
+							}
+						},
+						{
+							"key": "int_v",
+							"value": {
+								"type": "Int",
+								"content": 100
 							}
 						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
+					],
+					"setSystemVariable": true
 				}
 			}
 		],
-		"parameters": {
-			"Tbl_Customer": {
-				"type": "string",
-				"defaultValue": "Customer"
-			},
-			"Tbl_Address": {
-				"type": "string",
-				"defaultValue": "Address"
-			},
-			"Tbl_CustomerAddress": {
-				"type": "string",
-				"defaultValue": "CustomerAddress"
-			},
-			"Schema": {
-				"type": "string",
-				"defaultValue": "SalesLT"
-			},
-			"Tbl_Destination": {
-				"type": "string",
-				"defaultValue": "CustomerAddressDetail"
+		"variables": {
+			"a": {
+				"type": "Integer"
 			}
 		},
 		"annotations": [],

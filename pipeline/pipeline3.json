@@ -3,18 +3,41 @@
 	"properties": {
 		"activities": [
 			{
+				"name": "Execute Pipeline1",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pipeline1",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
 				"name": "Set variable1",
 				"type": "SetVariable",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "Child_A",
+					"variableName": "a",
 					"value": {
-						"value": "@pipeline().parameters.Child_param_A",
+						"value": "@activity('Execute Pipeline1').output.pipelineReturnValue.int_v",
 						"type": "Expression"
 					}
 				}
@@ -26,8 +49,8 @@
 			}
 		},
 		"variables": {
-			"Child_A": {
-				"type": "Array"
+			"a": {
+				"type": "Integer"
 			}
 		},
 		"annotations": []
