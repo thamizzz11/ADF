@@ -1,0 +1,35 @@
+{
+	"name": "pipeline3",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Child_A",
+					"value": {
+						"value": "@pipeline().parameters.Child_param_A",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"Child_param_A": {
+				"type": "array"
+			}
+		},
+		"variables": {
+			"Child_A": {
+				"type": "Array"
+			}
+		},
+		"annotations": []
+	}
+}
