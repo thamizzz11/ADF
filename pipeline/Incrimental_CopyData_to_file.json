@@ -1,0 +1,155 @@
+{
+	"name": "Incrimental_CopyData_to_file",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup",
+				"description": "Get the max_modifieddate",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select top 1 max_ModifiedDate from inc_load where tablename='SalesLT.Customer' order by 1 desc",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_table",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_pr_schemaname": "salesLT",
+							"ds_pr_tablename": "customer"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select * from salesLT.Customer where ModifiedDate > '@{activity('Lookup').output.firstRow.max_ModifiedDate}'\n\n",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_table",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_pr_schemaname": "salesLT",
+							"ds_pr_tablename": "customer"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_adls_delimitedtext",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderpath": "landing/sample",
+							"filename": "Customer_historic"
+						}
+					}
+				]
+			},
+			{
+				"name": "Script1",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "insert into inc_load(tablename,max_ModifiedDate,run_id) \nselect 'SalesLT.Customer',(select max(ModifiedDate) from SalesLT.Customer ),'@{pipeline().RunId}'",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-05-30T10:11:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

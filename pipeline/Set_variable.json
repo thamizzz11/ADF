@@ -1,0 +1,111 @@
+{
+	"name": "Set_variable",
+	"properties": {
+		"activities": [
+			{
+				"name": "Filter",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Append variable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('Files')",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@greater(int(item()),3)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable",
+				"description": "set variable [files]",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Files",
+					"value": [
+						"1",
+						"2",
+						"3",
+						"4",
+						"5"
+					]
+				}
+			},
+			{
+				"name": "Append variable",
+				"type": "AppendVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Files",
+					"value": "6"
+				}
+			},
+			{
+				"name": "Until1",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "Filter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Filter').output.value,6)",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Fail1",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@string(activity('Filter').output.value)",
+									"type": "Expression"
+								},
+								"errorCode": "1"
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			}
+		],
+		"variables": {
+			"Files": {
+				"type": "Array"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-29T11:32:37Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

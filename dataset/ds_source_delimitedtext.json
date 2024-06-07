@@ -1,0 +1,38 @@
+{
+	"name": "ds_source_delimitedtext",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_dev_adls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"source_path": {
+				"type": "String"
+			},
+			"file_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().file_name",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().source_path",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

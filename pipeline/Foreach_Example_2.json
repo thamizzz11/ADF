@@ -1,0 +1,139 @@
+{
+	"name": "Foreach_Example_2",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup Customer",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select count(*) cnt from salesLT.@{pipeline().parameters.SourceTable}",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureDB_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "SalesLT",
+							"TableName": "Customer"
+						}
+					}
+				}
+			},
+			{
+				"name": "If Condition check count greater than 100",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup Customer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Lookup Customer').output.firstRow.cnt,100)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "if object_Id('salesLT.@{pipeline().parameters.Copy_Table}') is not null\nTruncate table salesLT.@{pipeline().parameters.Copy_Table}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "AzureDB_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "salesLT",
+										"TableName": {
+											"value": "@pipeline().parameters.SourceTable",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "AzureDB_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "salesLT",
+										"TableName": {
+											"value": "@pipeline().parameters.Copy_Table",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"SourceTable": {
+				"type": "string",
+				"defaultValue": "Customer"
+			},
+			"Copy_Table": {
+				"type": "string",
+				"defaultValue": "Customer_Copy"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-06-06T06:52:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

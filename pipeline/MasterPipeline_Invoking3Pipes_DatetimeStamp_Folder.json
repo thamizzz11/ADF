@@ -1,0 +1,131 @@
+{
+	"name": "MasterPipeline_Invoking3Pipes_DatetimeStamp_Folder",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Pipeline for CustomerCopy",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Foreach_Example_Table_ADLS",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"SchemaName": "salesLT",
+						"TableName": {
+							"value": "@pipeline().parameters.Table1",
+							"type": "Expression"
+						},
+						"Directory": {
+							"value": "@concat(pipeline().parameters.Table1,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+							"type": "Expression"
+						},
+						"FileName": {
+							"value": "@concat(pipeline().parameters.Table1,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline for Addresscopy",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline for CustomerCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Foreach_Example_Table_ADLS",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"SchemaName": "salesLT",
+						"TableName": {
+							"value": "@pipeline().parameters.Table2",
+							"type": "Expression"
+						},
+						"Directory": {
+							"value": "@concat(pipeline().parameters.Table2,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+							"type": "Expression"
+						},
+						"FileName": {
+							"value": "@concat(pipeline().parameters.Table2,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline for CustomerAddressCopy",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline for Addresscopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Foreach_Example_Table_ADLS",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"SchemaName": "salesLT",
+						"TableName": {
+							"value": "@pipeline().parameters.Table3",
+							"type": "Expression"
+						},
+						"Directory": {
+							"value": "@concat(pipeline().parameters.Table3,'/',formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'),'/',formatDateTime(utcNow(),'hh'),'/',formatDateTime(utcNow(),'mm'),'/',formatDateTime(utcNow(),'ss'))\n",
+							"type": "Expression"
+						},
+						"FileName": {
+							"value": "@concat(pipeline().parameters.Table3,'_',\nreplace(formatDateTime(utcNow(),'dd-MM-yyyy-hh-mm-ss'),'-',''),\n'.csv')\n\n",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"Table1": {
+				"type": "string",
+				"defaultValue": "Customer"
+			},
+			"Table2": {
+				"type": "string",
+				"defaultValue": "Product"
+			},
+			"Table3": {
+				"type": "string",
+				"defaultValue": "CustomerAddress"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-06-05T15:57:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

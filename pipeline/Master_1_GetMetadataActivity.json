@@ -1,0 +1,244 @@
+{
+	"name": "Master_1_GetMetadataActivity",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ADLS_CSV_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory": {
+								"value": "@if( equals(empty(variables('Path')),true),first(variables('Directory')) ,variables('Path') )",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If Condition Check Type",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals( item().type ,'Folder')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set variable FileName",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Set variable FilePath",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [
+											{
+												"name": "FileName",
+												"value": "@{item().name}"
+											}
+										],
+										"typeProperties": {
+											"variableName": "FileName",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Get Metadata L1",
+										"type": "GetMetadata",
+										"dependsOn": [
+											{
+												"activity": "Set variable FileName",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataset": {
+												"referenceName": "ADLS_CSV_Generic_Dest_DS",
+												"type": "DatasetReference",
+												"parameters": {
+													"Directory": {
+														"value": "@variables('Path')",
+														"type": "Expression"
+													},
+													"FileName": {
+														"value": "@variables('FileName')",
+														"type": "Expression"
+													}
+												}
+											},
+											"fieldList": [
+												"itemName",
+												"itemType",
+												"size",
+												"exists",
+												"childItems",
+												"columnCount",
+												"structure"
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										}
+									},
+									{
+										"name": "Set variable FilePath",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [
+											{
+												"name": "Path",
+												"value": "@{join(variables('Directory'),'/')}"
+											}
+										],
+										"typeProperties": {
+											"variableName": "Path",
+											"value": {
+												"value": "@join(variables('Directory'),'/')",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Append variable Directory",
+										"type": "AppendVariable",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "Directory",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Set variable Path",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Append variable Directory",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [
+											{
+												"name": "Path",
+												"value": "@{join(variables('Directory'),'/')}"
+											}
+										],
+										"typeProperties": {
+											"variableName": "Path",
+											"value": {
+												"value": "@join(variables('Directory'),'/')",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"Directory": {
+				"type": "Array",
+				"defaultValue": [
+					"Customer"
+				]
+			},
+			"FileName": {
+				"type": "String"
+			},
+			"Path": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-06-05T10:16:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

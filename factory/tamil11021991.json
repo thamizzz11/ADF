@@ -1,0 +1,9 @@
+{
+	"name": "tamil11021991",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "76e4c39b-24fe-413f-9079-468358db9c58",
+		"tenantId": "2e6bf533-c9f8-4818-8ccc-851969105cc8"
+	}
+}

@@ -1,0 +1,160 @@
+{
+	"name": "GetMetadataActivity_1",
+	"properties": {
+		"description": "Get the Filename and filesize to a txt file",
+		"activities": [
+			{
+				"name": "Get Metadata of Folder",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ADLS_CSV_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory": "sample"
+						}
+					},
+					"fieldList": [
+						"childItems",
+						"lastModified"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata of Folder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata of Folder').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set variable Itemname",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Itemname",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set variable Itemtype",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set variable Itemname",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Itemtype",
+								"value": {
+									"value": "@item().type",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Script1",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Set variable Itemtype",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_azuresqldb",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"ls_pr_databasename": "tamil11021991db",
+									"ls_pr_username": "tamil",
+									"ls_pr_password": "MayFlower@2024"
+								}
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": {
+											"value": "insert into File_info(Itemname,ItemType) values ('@{variables('Itemname')}','@{variables('Itemtype')}')",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"Itemname": {
+				"type": "String"
+			},
+			"Itemtype": {
+				"type": "String"
+			},
+			"IsExists": {
+				"type": "Boolean"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-06-05T06:59:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,227 @@
+{
+	"name": "Web_activity",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://vpic.nhtsa.dot.gov/api/vehicles/getallmanufacturers?format=json"
+				}
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Json_Results",
+					"value": {
+						"value": "@activity('Web1').output.Results",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('Json_Results')",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set variable2",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "json_value",
+								"value": {
+									"value": "@string(item())",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set variable2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "declare @json varchar(max)\r\nset @json=N'@{variables('Json_Results')}'\r\nselect Mfr_ID,Mfr_CommonName,Mfr_Name,Country,IsPrimary,VehicleTypeName \r\nFROM OPENJSON(@json) WITH (\r\n\tCountry NVARCHAR(50) '$.Country',\r\n\tMfr_CommonName NVARCHAR(50) '$.Mfr_CommonName',\r\n\tMfr_ID INT '$.Mfr_ID',\r\n\tMfr_Name NVARCHAR(50) '$.Mfr_Name',\r\n\tVehicleTypes NVARCHAR(max) '$.VehicleTypes' as JSON\r\n)\r\nOUTER APPLY OPENJSON(VehicleTypes) WITH \r\n\t(IsPrimary NVARCHAR(50) '$.IsPrimary',\r\n\tVehicleTypeName NVARCHAR(250) '$.Name');",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "Mfr_ID",
+												"type": "Int32",
+												"physicalType": "int"
+											},
+											"sink": {
+												"name": "CustomerID"
+											}
+										},
+										{
+											"source": {
+												"name": "Mfr_CommonName",
+												"type": "String",
+												"physicalType": "nvarchar"
+											},
+											"sink": {
+												"name": "NameStyle"
+											}
+										},
+										{
+											"source": {
+												"name": "Mfr_Name",
+												"type": "String",
+												"physicalType": "nvarchar"
+											},
+											"sink": {
+												"name": "Title"
+											}
+										},
+										{
+											"source": {
+												"name": "Country",
+												"type": "String",
+												"physicalType": "nvarchar"
+											},
+											"sink": {
+												"name": "FirstName"
+											}
+										},
+										{
+											"source": {
+												"name": "IsPrimary",
+												"type": "String",
+												"physicalType": "nvarchar"
+											},
+											"sink": {
+												"name": "MiddleName"
+											}
+										},
+										{
+											"source": {
+												"name": "VehicleTypeName",
+												"type": "String",
+												"physicalType": "nvarchar"
+											},
+											"sink": {
+												"name": "LastName"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_table",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_pr_schemaname": "salesLT",
+										"ds_pr_tablename": "customer"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_table",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_pr_schemaname": "dbo",
+										"ds_pr_tablename": "test"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"Json_Results": {
+				"type": "Array"
+			},
+			"json_value": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-29T13:48:41Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

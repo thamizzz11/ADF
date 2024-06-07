@@ -1,0 +1,182 @@
+{
+	"name": "GetMetadataActivity_Recursively",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"description": "Get the list of  files and folders in a mentioned path",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Directory",
+						"value": "@if(empty(variables('Path')),@{variables('Directory')},@{variables('Path')})"
+					}
+				],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ADLS_CSV_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"Directory": {
+								"value": "@if(empty(variables('Path')), first(variables('Directory')),variables('Path'))",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach Items in folder",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If Condition check on type",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [
+								{
+									"name": "Name",
+									"value": "@{item().name}"
+								},
+								{
+									"name": "Type",
+									"value": "@{item().type}"
+								}
+							],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals( item().type ,'Folder')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set variable",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [
+											{
+												"name": "FileName",
+												"value": "@item().name"
+											}
+										],
+										"typeProperties": {
+											"variableName": "Filename",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Append variable Directory",
+										"type": "AppendVariable",
+										"dependsOn": [],
+										"userProperties": [
+											{
+												"name": "FolderPath",
+												"value": "@{variables('Directory')}"
+											}
+										],
+										"typeProperties": {
+											"variableName": "Directory",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Set variable Path",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Append variable Directory",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [
+											{
+												"name": "Directory",
+												"value": "@{variables('Directory')}"
+											}
+										],
+										"typeProperties": {
+											"variableName": "Path",
+											"value": {
+												"value": "@join(variables('Directory'),'/')",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"Directory": {
+				"type": "Array",
+				"defaultValue": [
+					"Customer"
+				]
+			},
+			"Filename": {
+				"type": "String"
+			},
+			"Path": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-06-05T09:36:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

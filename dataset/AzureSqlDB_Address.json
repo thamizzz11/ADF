@@ -1,0 +1,76 @@
+{
+	"name": "AzureSqlDB_Address",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_azuresqldb",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"ls_pr_databasename": "tamil11021991db",
+				"ls_pr_username": "tamil",
+				"ls_pr_password": "MayFlower@2024"
+			}
+		},
+		"parameters": {
+			"SchemaName": {
+				"type": "string"
+			},
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AddressID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AddressLine1",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AddressLine2",
+				"type": "nvarchar"
+			},
+			{
+				"name": "City",
+				"type": "nvarchar"
+			},
+			{
+				"name": "StateProvince",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CountryRegion",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PostalCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "rowguid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "ModifiedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().SchemaName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

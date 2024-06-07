@@ -1,0 +1,31 @@
+{
+	"name": "TR_on_blob_create",
+	"properties": {
+		"description": "trigger on blob creation in output folder",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Insert_log_blob_on_create",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"PR_filename": "@triggerBody().fileName",
+					"PR_Deletetime": "@trigger().startTime",
+					"PR_Databasename": "tamil11021991db"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/landing/blobs/output",
+			"blobPathEndsWith": ".txt",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/3aea52c1-30dd-4e3b-b526-06e19cd1a6a1/resourceGroups/ADE-DEV/providers/Microsoft.Storage/storageAccounts/thamizhdevadlssa",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

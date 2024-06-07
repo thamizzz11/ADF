@@ -1,0 +1,62 @@
+{
+	"name": "ADLS_JSON_Generic_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_dev_adls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Directory": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().Directory",
+					"type": "Expression"
+				},
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"CustomerID": {
+					"type": "integer"
+				},
+				"Title": {
+					"type": "string"
+				},
+				"FirstName": {
+					"type": "string"
+				},
+				"MiddleName": {
+					"type": "string"
+				},
+				"LastName": {
+					"type": "string"
+				},
+				"Suffix": {
+					"type": "string"
+				},
+				"CompanyName": {
+					"type": "string"
+				},
+				"SalesPerson": {
+					"type": "string"
+				},
+				"EmailAddress": {
+					"type": "string"
+				},
+				"Phone": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

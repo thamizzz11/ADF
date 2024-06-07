@@ -1,0 +1,156 @@
+{
+	"name": "Copy_file",
+	"properties": {
+		"description": "Copy a file from source path to destination path in ADLS",
+		"activities": [
+			{
+				"name": "Copy File",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "@{pipeline().parameters.SourcePath}//@{pipeline().parameters.Source_filename}"
+					},
+					{
+						"name": "Destination",
+						"value": "@{pipeline().parameters.DestinationPath}//@{pipeline().parameters.Source_filename}"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "FilePath",
+								"value": "$$FILENAME"
+							},
+							{
+								"name": "TimeStamp",
+								"value": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"type": "String",
+									"ordinal": 1
+								},
+								"sink": {
+									"name": "Column1",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "FilePath",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Column2",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "TimeStamp",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Column3",
+									"type": "String",
+									"physicalType": "String"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_source_delimitedtext",
+						"type": "DatasetReference",
+						"parameters": {
+							"source_path": {
+								"value": "@pipeline().parameters.SourcePath",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@pipeline().parameters.Source_filename",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_dest_delimitedtext",
+						"type": "DatasetReference",
+						"parameters": {
+							"dest_path": {
+								"value": "@pipeline().parameters.DestinationPath",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"SourcePath": {
+				"type": "string",
+				"defaultValue": "landing/sample"
+			},
+			"DestinationPath": {
+				"type": "string",
+				"defaultValue": "landing/output"
+			},
+			"Source_filename": {
+				"type": "string",
+				"defaultValue": "Employee_Dept.txt"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-28T14:37:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

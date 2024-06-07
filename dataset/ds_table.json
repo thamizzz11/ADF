@@ -1,0 +1,102 @@
+{
+	"name": "ds_table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_azuresqldb",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"ls_pr_databasename": "tamil11021991db",
+				"ls_pr_username": "tamil",
+				"ls_pr_password": "MayFlower@2024"
+			}
+		},
+		"parameters": {
+			"ds_pr_schemaname": {
+				"type": "string",
+				"defaultValue": "salesLT"
+			},
+			"ds_pr_tablename": {
+				"type": "string",
+				"defaultValue": "customer"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CustomerID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "NameStyle",
+				"type": "bit"
+			},
+			{
+				"name": "Title",
+				"type": "nvarchar"
+			},
+			{
+				"name": "FirstName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MiddleName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Suffix",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CompanyName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SalesPerson",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmailAddress",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Phone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PasswordHash",
+				"type": "varchar"
+			},
+			{
+				"name": "PasswordSalt",
+				"type": "varchar"
+			},
+			{
+				"name": "rowguid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "ModifiedDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().ds_pr_schemaname",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().ds_pr_tablename",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,113 @@
+{
+	"name": "Copy_file_in_folder",
+	"properties": {
+		"description": "copy all the files in a folder to the destination folder",
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"description": "Get the Metadata information of the folder",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_sourefolder",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_pr_folderpath": {
+								"value": "@pipeline().parameters.PR_sourcepath",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems",
+						"exists",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach",
+				"description": "Iterate over the folder child items",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute Pipeline",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Copy_file",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"SourcePath": {
+										"value": "@pipeline().parameters.PR_sourcepath",
+										"type": "Expression"
+									},
+									"DestinationPath": {
+										"value": "@pipeline().parameters.PR_destinationpath",
+										"type": "Expression"
+									},
+									"Source_filename": {
+										"value": "@item().name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PR_sourcepath": {
+				"type": "string",
+				"defaultValue": "landing/sample"
+			},
+			"PR_destinationpath": {
+				"type": "string",
+				"defaultValue": "landing/output"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-28T08:33:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

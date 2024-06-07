@@ -1,0 +1,80 @@
+{
+	"name": "Insert_log_blob_on_create",
+	"properties": {
+		"description": "Makes a log entry in log_blob_delete",
+		"activities": [
+			{
+				"name": "Script1",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": {
+							"value": "@pipeline().parameters.PR_Databasename",
+							"type": "Expression"
+						},
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"parameters": [
+								{
+									"name": "filename",
+									"type": "String",
+									"value": {
+										"value": "@pipeline().parameters.PR_filename",
+										"type": "Expression"
+									},
+									"direction": "Input"
+								},
+								{
+									"name": "deleted_time",
+									"type": "Datetime",
+									"value": {
+										"value": "@pipeline().parameters.PR_Deletetime",
+										"type": "Expression"
+									},
+									"direction": "Input"
+								}
+							],
+							"type": "Query",
+							"text": {
+								"value": "insert into log_blob_deleted values ( @filename,@deleted_time)",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"PR_filename": {
+				"type": "string"
+			},
+			"PR_Deletetime": {
+				"type": "string"
+			},
+			"PR_Databasename": {
+				"type": "string",
+				"defaultValue": "tamil11021991db"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-28T14:00:55Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

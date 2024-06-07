@@ -1,0 +1,97 @@
+{
+	"name": "Foreach_Example",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select s.name as schemaname,t.name as tablename from sys.tables t\ninner join sys.schemas s on t.schema_id=s.schema_id \nwhere t.name like 'customer%'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureDB_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "salesLT",
+							"TableName": "address"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Execute Pipeline",
+							"description": "Foreach_Example_Table_ADLS",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Foreach_Example_Table_ADLS",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"SchemaName": {
+										"value": "@item().schemaname",
+										"type": "Expression"
+									},
+									"TableName": {
+										"value": "@item().tablename",
+										"type": "Expression"
+									},
+									"Directory": {
+										"value": "@item().tablename",
+										"type": "Expression"
+									},
+									"FileName": {
+										"value": "@concat(item().schemaname,item().tablename, formatDateTime(utcNow()),'.csv')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-06-03T14:13:16Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

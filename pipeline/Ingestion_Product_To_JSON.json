@@ -1,0 +1,269 @@
+{
+	"name": "Ingestion_Product_To_JSON",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup Product",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select count(*) as cnt from salesLT.Product",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureDB_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "salesLT",
+							"TableName": "Product"
+						}
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "If Condition check on ProductCount",
+				"description": "check for the count of records greater than 10",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup Product",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [
+					{
+						"name": "Product_Cnt",
+						"value": "@{activity('Lookup Product').output.firstRow.cnt}"
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Lookup Product').output.firstRow.cnt,10)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 5
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Copy Product",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "@{'salesLT'}.@{'Product'}"
+								},
+								{
+									"name": "Destination",
+									"value": "landing/@{'Product'}/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "AzureDB_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "salesLT",
+										"TableName": "Product"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ADLS_JSON_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory": "Product"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup Address",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "If Condition check on ProductCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select count(*) as cnt from salesLT.Address",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureDB_Generic_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "salesLT",
+							"TableName": "Address"
+						}
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "If Condition check on AddressCount",
+				"description": "check for the count of records greater than 100",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup Address",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [
+					{
+						"name": "Address_cnt",
+						"value": "@{activity('Lookup Address').output.firstRow.cnt}"
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Lookup Address').output.firstRow.cnt,100)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Wait2",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 5
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Copy Address",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "@{'salesLT'}.@{'Address'}"
+								},
+								{
+									"name": "Destination",
+									"value": "landing/@{'Address'}/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "AzureDB_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "salesLT",
+										"TableName": "Address"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ADLS_JSON_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory": "Address"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-06-03T12:30:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

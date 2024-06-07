@@ -1,0 +1,32 @@
+{
+	"name": "ls_azuresqldb",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"ls_pr_databasename": {
+				"type": "string",
+				"defaultValue": "tamil11021991db"
+			},
+			"ls_pr_username": {
+				"type": "string",
+				"defaultValue": "tamil"
+			},
+			"ls_pr_password": {
+				"type": "string",
+				"defaultValue": "MayFlower@2024"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "tamil11021991.database.windows.net",
+			"database": "@{linkedService().ls_pr_databasename}",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"hostNameInCertificate": "",
+			"authenticationType": "SQL",
+			"userName": "@{linkedService().ls_pr_username}",
+			"password": "@{linkedService().ls_pr_password}"
+		}
+	}
+}

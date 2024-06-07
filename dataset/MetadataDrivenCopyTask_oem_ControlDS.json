@@ -1,0 +1,20 @@
+{
+	"name": "MetadataDrivenCopyTask_oem_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Azure_SQLDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MetadataDrivenCopyTask_oem_20240604"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MainControlTable_oem"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,40 @@
+{
+	"name": "TR_copy_file_in_folder",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Copy_file_in_folder",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"PR_sourcepath": "landing/sample",
+					"PR_destinationpath": "landing/output"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2024-05-28T06:42:00",
+				"endTime": "2024-05-29T06:42:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						6
+					],
+					"hours": [
+						14
+					],
+					"weekDays": [
+						"Tuesday"
+					]
+				}
+			}
+		}
+	}
+}

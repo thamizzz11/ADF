@@ -1,0 +1,39 @@
+{
+	"name": "TR_Copy_file",
+	"properties": {
+		"description": "copy file from source to destination patj",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Copy_file",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"SourcePath": "landing/sample",
+					"DestinationPath": "landing/output",
+					"Source_filename": "sample.txt"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2024-05-27T12:20:00",
+				"endTime": "2024-05-29T06:37:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						15
+					],
+					"hours": [
+						12
+					]
+				}
+			}
+		}
+	}
+}

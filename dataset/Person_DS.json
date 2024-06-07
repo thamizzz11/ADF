@@ -1,0 +1,36 @@
+{
+	"name": "Person_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_azuresqldb",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "DateofBirth",
+				"type": "date"
+			},
+			{
+				"name": "Age",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "person"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

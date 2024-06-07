@@ -1,0 +1,541 @@
+{
+	"name": "GetMetadata_Folder_count",
+	"properties": {
+		"description": "Get the folder and their file count",
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ADLS_Blob",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter1",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type,'Folder')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Filter2",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type,'File')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter1').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Get Metadata2",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ADLS_CSV_Generic_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"Directory": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"childItems"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "Filter3",
+							"type": "Filter",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('Get Metadata2').output.childItems",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals( item().name,'Folder' )",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Filter4",
+							"type": "Filter",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('Get Metadata2').output.childItems",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals( item().name,'File' )",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "ForEach2",
+							"type": "ForEach",
+							"dependsOn": [
+								{
+									"activity": "Filter3",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('Filter3').output.value",
+									"type": "Expression"
+								},
+								"activities": [
+									{
+										"name": "Get Metadata3",
+										"type": "GetMetadata",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataset": {
+												"referenceName": "ADLS_CSV_Generic_DS",
+												"type": "DatasetReference",
+												"parameters": {
+													"Directory": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											},
+											"fieldList": [
+												"childItems"
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										}
+									},
+									{
+										"name": "Filter5",
+										"type": "Filter",
+										"dependsOn": [
+											{
+												"activity": "Get Metadata3",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"items": {
+												"value": "@activity('Get Metadata3').output.childItems",
+												"type": "Expression"
+											},
+											"condition": {
+												"value": "@equals( item().name,'Folder' )",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Filter6",
+										"type": "Filter",
+										"dependsOn": [
+											{
+												"activity": "Get Metadata3",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"items": {
+												"value": "@activity('Get Metadata3').output.childItems",
+												"type": "Expression"
+											},
+											"condition": {
+												"value": "@equals( item().name,'File' )",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "ForEach3",
+										"type": "ForEach",
+										"dependsOn": [
+											{
+												"activity": "Filter5",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"items": {
+												"value": "@activity('Filter5').output.value",
+												"type": "Expression"
+											},
+											"activities": [
+												{
+													"name": "Get Metadata4",
+													"type": "GetMetadata",
+													"dependsOn": [],
+													"policy": {
+														"timeout": "0.12:00:00",
+														"retry": 0,
+														"retryIntervalInSeconds": 30,
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"dataset": {
+															"referenceName": "ADLS_CSV_Generic_DS",
+															"type": "DatasetReference",
+															"parameters": {
+																"Directory": {
+																	"value": "@item().name",
+																	"type": "Expression"
+																}
+															}
+														},
+														"fieldList": [
+															"childItems"
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													}
+												},
+												{
+													"name": "Filter7",
+													"type": "Filter",
+													"dependsOn": [
+														{
+															"activity": "Get Metadata4",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"userProperties": [],
+													"typeProperties": {
+														"items": {
+															"value": "@activity('Get Metadata4').output.childItems",
+															"type": "Expression"
+														},
+														"condition": {
+															"value": "@equals( item().name,'Folder' )",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "Filter8",
+													"type": "Filter",
+													"dependsOn": [
+														{
+															"activity": "Get Metadata4",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"userProperties": [],
+													"typeProperties": {
+														"items": {
+															"value": "@activity('Get Metadata4').output.childItems",
+															"type": "Expression"
+														},
+														"condition": {
+															"value": "@equals( item().name,'File' )",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "ForEach4",
+													"type": "ForEach",
+													"dependsOn": [
+														{
+															"activity": "Filter7",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"userProperties": [],
+													"typeProperties": {
+														"items": {
+															"value": "@activity('Filter7').output.value",
+															"type": "Expression"
+														},
+														"activities": [
+															{
+																"name": "Get Metadata5",
+																"type": "GetMetadata",
+																"dependsOn": [],
+																"policy": {
+																	"timeout": "0.12:00:00",
+																	"retry": 0,
+																	"retryIntervalInSeconds": 30,
+																	"secureOutput": false,
+																	"secureInput": false
+																},
+																"userProperties": [],
+																"typeProperties": {
+																	"dataset": {
+																		"referenceName": "ADLS_CSV_Generic_DS",
+																		"type": "DatasetReference",
+																		"parameters": {
+																			"Directory": {
+																				"value": "@item().name",
+																				"type": "Expression"
+																			}
+																		}
+																	},
+																	"fieldList": [
+																		"childItems"
+																	],
+																	"storeSettings": {
+																		"type": "AzureBlobFSReadSettings",
+																		"recursive": true,
+																		"enablePartitionDiscovery": false
+																	},
+																	"formatSettings": {
+																		"type": "DelimitedTextReadSettings"
+																	}
+																}
+															},
+															{
+																"name": "Filter9",
+																"type": "Filter",
+																"dependsOn": [
+																	{
+																		"activity": "Get Metadata5",
+																		"dependencyConditions": [
+																			"Succeeded"
+																		]
+																	}
+																],
+																"userProperties": [],
+																"typeProperties": {
+																	"items": {
+																		"value": "@activity('Get Metadata3').output.childItems",
+																		"type": "Expression"
+																	},
+																	"condition": {
+																		"value": "@equals( item().name,'Folder' )",
+																		"type": "Expression"
+																	}
+																}
+															},
+															{
+																"name": "Filter10",
+																"type": "Filter",
+																"dependsOn": [
+																	{
+																		"activity": "Get Metadata5",
+																		"dependencyConditions": [
+																			"Succeeded"
+																		]
+																	}
+																],
+																"userProperties": [],
+																"typeProperties": {
+																	"items": {
+																		"value": "@activity('Get Metadata3').output.childItems",
+																		"type": "Expression"
+																	},
+																	"condition": {
+																		"value": "@equals( item().name,'File' )",
+																		"type": "Expression"
+																	}
+																}
+															}
+														]
+													}
+												}
+											]
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Script1",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Filter2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": {
+								"value": "insert into folder_filecount(foldername,filecount) select '@{activity('Get Metadata1').output.itemName}',Output.FilteredItemsCount)",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-06-06T09:57:44Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
