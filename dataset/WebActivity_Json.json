@@ -1,0 +1,19 @@
+{
+	"name": "WebActivity_Json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_dev_adls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "JSON",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {}
+	}
+}
