@@ -13,6 +13,80 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Copy_Customer_To_CSV_PipeDelimited')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_Customer_To_CSV_PipeDelimited",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AzureDB_Generic_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"SchemaName": "salesLT",
+									"TableName": "Customer"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_CSV_PipeDelimited_Generic_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"Directory": "CSV_Pipe"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-06-02T14:31:33Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Copy_Customer_To_JSON')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -947,6 +1021,8 @@
 					{
 						"name": "Copy data1",
 						"type": "Copy",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -1045,6 +1121,97 @@
 								"parameters": {
 									"Directory": "JSON"
 								}
+							}
+						]
+					},
+					{
+						"name": "Copy data2",
+						"description": "Get the users info from the RestAPI and load into the table table_json",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "RestSource",
+								"httpRequestTimeout": "00:01:40",
+								"requestInterval": "00.00:00:00.010",
+								"requestMethod": "GET",
+								"paginationRules": {
+									"supportRFC5988": "true"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['id']"
+										},
+										"sink": {
+											"name": "id"
+										}
+									},
+									{
+										"source": {
+											"path": "[['email']"
+										},
+										"sink": {
+											"name": "email"
+										}
+									},
+									{
+										"source": {
+											"path": "[['first_name']"
+										},
+										"sink": {
+											"name": "firstname"
+										}
+									},
+									{
+										"source": {
+											"path": "[['last_name']"
+										},
+										"sink": {
+											"name": "lastname"
+										}
+									},
+									{
+										"source": {
+											"path": "[['avatar']"
+										},
+										"sink": {
+											"name": "avatar"
+										}
+									}
+								],
+								"collectionReference": "$['data']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Rest_API_Users_DS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_RESTAPI_output_DB",
+								"type": "DatasetReference",
+								"parameters": {}
 							}
 						]
 					}
@@ -3259,514 +3426,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-06-05T10:16:48Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/MetadataDrivenCopyTask_oem_BottomLevel')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "This pipeline will copy objects from one group. The objects belonging to this group will be copied parallelly.",
-				"activities": [
-					{
-						"name": "ListObjectsFromOneGroup",
-						"description": "List objects from one group and iterate each of them to downstream activities",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.ObjectsPerGroupToCopy",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "RouteJobsBasedOnLoadingBehavior",
-									"description": "Check the loading behavior for each object if it requires full load or incremental load. If it is Default or FullLoad case, do full load. If it is DeltaLoad case, do incremental load.",
-									"type": "Switch",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"on": {
-											"value": "@json(item().DataLoadingBehaviorSettings).dataLoadingBehavior",
-											"type": "Expression"
-										},
-										"cases": [
-											{
-												"value": "FullLoad",
-												"activities": [
-													{
-														"name": "FullLoadOneObject",
-														"description": "Take a full snapshot on this object and copy it to the destination",
-														"type": "Copy",
-														"dependsOn": [],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [
-															{
-																"name": "Source",
-																"value": "@{json(item().SourceObjectSettings).schema}.@{json(item().SourceObjectSettings).table}"
-															},
-															{
-																"name": "Destination",
-																"value": "@{json(item().SinkObjectSettings).fileSystem}/@{json(item().SinkObjectSettings).folderPath}/@{json(item().SinkObjectSettings).fileName}"
-															}
-														],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "@json(item().CopySourceSettings).sqlReaderQuery",
-																	"type": "Expression"
-																},
-																"partitionOption": {
-																	"value": "@json(item().CopySourceSettings).partitionOption",
-																	"type": "Expression"
-																},
-																"partitionSettings": {
-																	"partitionColumnName": {
-																		"value": "@json(item().CopySourceSettings).partitionColumnName",
-																		"type": "Expression"
-																	},
-																	"partitionUpperBound": {
-																		"value": "@json(item().CopySourceSettings).partitionUpperBound",
-																		"type": "Expression"
-																	},
-																	"partitionLowerBound": {
-																		"value": "@json(item().CopySourceSettings).partitionLowerBound",
-																		"type": "Expression"
-																	},
-																	"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-																}
-															},
-															"sink": {
-																"type": "DelimitedTextSink",
-																"storeSettings": {
-																	"type": "AzureBlobFSWriteSettings"
-																},
-																"formatSettings": {
-																	"type": "DelimitedTextWriteSettings",
-																	"quoteAllText": true,
-																	"fileExtension": ".txt"
-																}
-															},
-															"enableStaging": false,
-															"validateDataConsistency": false,
-															"logSettings": {
-																"enableCopyActivityLog": true,
-																"copyActivityLogSettings": {
-																	"logLevel": "Warning",
-																	"enableReliableLogging": false
-																},
-																"logLocationSettings": {
-																	"linkedServiceName": {
-																		"referenceName": "ls_dev_adls",
-																		"type": "LinkedServiceReference"
-																	},
-																	"path": "landing/log"
-																}
-															},
-															"translator": {
-																"value": "@json(item().CopyActivitySettings).translator",
-																"type": "Expression"
-															}
-														},
-														"inputs": [
-															{
-																"referenceName": "MetadataDrivenCopyTask_oem_SourceDS",
-																"type": "DatasetReference",
-																"parameters": {
-																	"cw_schema": {
-																		"value": "@json(item().SourceObjectSettings).schema",
-																		"type": "Expression"
-																	},
-																	"cw_table": {
-																		"value": "@json(item().SourceObjectSettings).table",
-																		"type": "Expression"
-																	}
-																}
-															}
-														],
-														"outputs": [
-															{
-																"referenceName": "MetadataDrivenCopyTask_oem_DestinationDS",
-																"type": "DatasetReference",
-																"parameters": {
-																	"cw_fileName": {
-																		"value": "@json(item().SinkObjectSettings).fileName",
-																		"type": "Expression"
-																	},
-																	"cw_folderPath": {
-																		"value": "@json(item().SinkObjectSettings).folderPath",
-																		"type": "Expression"
-																	},
-																	"cw_fileSystem": {
-																		"value": "@json(item().SinkObjectSettings).fileSystem",
-																		"type": "Expression"
-																	}
-																}
-															}
-														]
-													}
-												]
-											},
-											{
-												"value": "DeltaLoad",
-												"activities": [
-													{
-														"name": "GetMaxWatermarkValue",
-														"description": "Query the source object to get the max value from watermark column",
-														"type": "Lookup",
-														"dependsOn": [],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "select max([@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}]) as CurrentMaxWaterMarkColumnValue from [@{json(item().SourceObjectSettings).schema}].[@{json(item().SourceObjectSettings).table}]",
-																	"type": "Expression"
-																},
-																"partitionOption": "None"
-															},
-															"dataset": {
-																"referenceName": "MetadataDrivenCopyTask_oem_SourceDS",
-																"type": "DatasetReference",
-																"parameters": {
-																	"cw_schema": {
-																		"value": "@json(item().SourceObjectSettings).schema",
-																		"type": "Expression"
-																	},
-																	"cw_table": {
-																		"value": "@json(item().SourceObjectSettings).table",
-																		"type": "Expression"
-																	}
-																}
-															}
-														}
-													},
-													{
-														"name": "DeltaLoadOneObject",
-														"description": "Copy the changed data only from last time via comparing the value in watermark column to identify changes.",
-														"type": "Copy",
-														"dependsOn": [
-															{
-																"activity": "GetMaxWatermarkValue",
-																"dependencyConditions": [
-																	"Succeeded"
-																]
-															}
-														],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [
-															{
-																"name": "Source",
-																"value": "@{json(item().SourceObjectSettings).schema}.@{json(item().SourceObjectSettings).table}"
-															},
-															{
-																"name": "Destination",
-																"value": "@{json(item().SinkObjectSettings).fileSystem}/@{json(item().SinkObjectSettings).folderPath}/@{json(item().SinkObjectSettings).fileName}"
-															}
-														],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "select * from [@{json(item().SourceObjectSettings).schema}].[@{json(item().SourceObjectSettings).table}] \n    where [@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}] > @{if(contains(json(item().DataLoadingBehaviorSettings).watermarkColumnType, 'Int'),\n    json(item().DataLoadingBehaviorSettings).watermarkColumnStartValue, \n    concat('''', json(item().DataLoadingBehaviorSettings).watermarkColumnStartValue, ''''))}\n    and [@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}] <= @{if(contains(json(item().DataLoadingBehaviorSettings).watermarkColumnType, 'Int'),\n    activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue, \n    concat('''', activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue, ''''))}",
-																	"type": "Expression"
-																},
-																"partitionOption": {
-																	"value": "@json(item().CopySourceSettings).partitionOption",
-																	"type": "Expression"
-																},
-																"partitionSettings": {
-																	"partitionColumnName": {
-																		"value": "@json(item().CopySourceSettings).partitionColumnName",
-																		"type": "Expression"
-																	},
-																	"partitionUpperBound": {
-																		"value": "@json(item().CopySourceSettings).partitionUpperBound",
-																		"type": "Expression"
-																	},
-																	"partitionLowerBound": {
-																		"value": "@json(item().CopySourceSettings).partitionLowerBound",
-																		"type": "Expression"
-																	},
-																	"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-																}
-															},
-															"sink": {
-																"type": "DelimitedTextSink",
-																"storeSettings": {
-																	"type": "AzureBlobFSWriteSettings"
-																},
-																"formatSettings": {
-																	"type": "DelimitedTextWriteSettings",
-																	"quoteAllText": true,
-																	"fileExtension": ".txt"
-																}
-															},
-															"enableStaging": false,
-															"validateDataConsistency": false,
-															"logSettings": {
-																"enableCopyActivityLog": true,
-																"copyActivityLogSettings": {
-																	"logLevel": "Warning",
-																	"enableReliableLogging": false
-																},
-																"logLocationSettings": {
-																	"linkedServiceName": {
-																		"referenceName": "ls_dev_adls",
-																		"type": "LinkedServiceReference"
-																	},
-																	"path": "landing/log"
-																}
-															},
-															"translator": {
-																"value": "@json(item().CopyActivitySettings).translator",
-																"type": "Expression"
-															}
-														},
-														"inputs": [
-															{
-																"referenceName": "MetadataDrivenCopyTask_oem_SourceDS",
-																"type": "DatasetReference",
-																"parameters": {
-																	"cw_schema": {
-																		"value": "@json(item().SourceObjectSettings).schema",
-																		"type": "Expression"
-																	},
-																	"cw_table": {
-																		"value": "@json(item().SourceObjectSettings).table",
-																		"type": "Expression"
-																	}
-																}
-															}
-														],
-														"outputs": [
-															{
-																"referenceName": "MetadataDrivenCopyTask_oem_DestinationDS",
-																"type": "DatasetReference",
-																"parameters": {
-																	"cw_fileName": {
-																		"value": "@{json(item().SinkObjectSettings).fileName}-@{json(item().DataLoadingBehaviorSettings).watermarkColumnStartValue}-@{activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue}",
-																		"type": "Expression"
-																	},
-																	"cw_folderPath": {
-																		"value": "@json(item().SinkObjectSettings).folderPath",
-																		"type": "Expression"
-																	},
-																	"cw_fileSystem": {
-																		"value": "@json(item().SinkObjectSettings).fileSystem",
-																		"type": "Expression"
-																	}
-																}
-															}
-														]
-													},
-													{
-														"name": "UpdateWatermarkColumnValue",
-														"type": "SqlServerStoredProcedure",
-														"dependsOn": [
-															{
-																"activity": "DeltaLoadOneObject",
-																"dependencyConditions": [
-																	"Succeeded"
-																]
-															}
-														],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [],
-														"typeProperties": {
-															"storedProcedureName": "[[dbo].[UpdateWatermarkColumnValue_oem]",
-															"storedProcedureParameters": {
-																"Id": {
-																	"value": {
-																		"value": "@item().Id",
-																		"type": "Expression"
-																	},
-																	"type": "Int32"
-																},
-																"watermarkColumnStartValue": {
-																	"value": {
-																		"value": "@activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue",
-																		"type": "Expression"
-																	},
-																	"type": "String"
-																}
-															}
-														},
-														"linkedServiceName": {
-															"referenceName": "LS_Azure_SQLDB",
-															"type": "LinkedServiceReference"
-														}
-													}
-												]
-											}
-										],
-										"defaultActivities": [
-											{
-												"name": "DefaultFullLoadOneObject",
-												"description": "Take a full snapshot on this object and copy it to the destination",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [
-													{
-														"name": "Source",
-														"value": "@{json(item().SourceObjectSettings).schema}.@{json(item().SourceObjectSettings).table}"
-													},
-													{
-														"name": "Destination",
-														"value": "@{json(item().SinkObjectSettings).fileSystem}/@{json(item().SinkObjectSettings).folderPath}/@{json(item().SinkObjectSettings).fileName}"
-													}
-												],
-												"typeProperties": {
-													"source": {
-														"type": "AzureSqlSource",
-														"sqlReaderQuery": {
-															"value": "@json(item().CopySourceSettings).sqlReaderQuery",
-															"type": "Expression"
-														},
-														"partitionOption": {
-															"value": "@json(item().CopySourceSettings).partitionOption",
-															"type": "Expression"
-														},
-														"partitionSettings": {
-															"partitionColumnName": {
-																"value": "@json(item().CopySourceSettings).partitionColumnName",
-																"type": "Expression"
-															},
-															"partitionUpperBound": {
-																"value": "@json(item().CopySourceSettings).partitionUpperBound",
-																"type": "Expression"
-															},
-															"partitionLowerBound": {
-																"value": "@json(item().CopySourceSettings).partitionLowerBound",
-																"type": "Expression"
-															},
-															"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-														}
-													},
-													"sink": {
-														"type": "DelimitedTextSink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														},
-														"formatSettings": {
-															"type": "DelimitedTextWriteSettings",
-															"quoteAllText": true,
-															"fileExtension": ".txt"
-														}
-													},
-													"enableStaging": false,
-													"validateDataConsistency": false,
-													"logSettings": {
-														"enableCopyActivityLog": true,
-														"copyActivityLogSettings": {
-															"logLevel": "Warning",
-															"enableReliableLogging": false
-														},
-														"logLocationSettings": {
-															"linkedServiceName": {
-																"referenceName": "ls_dev_adls",
-																"type": "LinkedServiceReference"
-															},
-															"path": "landing/log"
-														}
-													},
-													"translator": {
-														"value": "@json(item().CopyActivitySettings).translator",
-														"type": "Expression"
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "MetadataDrivenCopyTask_oem_SourceDS",
-														"type": "DatasetReference",
-														"parameters": {
-															"cw_schema": {
-																"value": "@json(item().SourceObjectSettings).schema",
-																"type": "Expression"
-															},
-															"cw_table": {
-																"value": "@json(item().SourceObjectSettings).table",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "MetadataDrivenCopyTask_oem_DestinationDS",
-														"type": "DatasetReference",
-														"parameters": {
-															"cw_fileName": {
-																"value": "@json(item().SinkObjectSettings).fileName",
-																"type": "Expression"
-															},
-															"cw_folderPath": {
-																"value": "@json(item().SinkObjectSettings).folderPath",
-																"type": "Expression"
-															},
-															"cw_fileSystem": {
-																"value": "@json(item().SinkObjectSettings).fileSystem",
-																"type": "Expression"
-															}
-														}
-													}
-												]
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"ObjectsPerGroupToCopy": {
-						"type": "Array"
-					}
-				},
-				"folder": {
-					"name": "MetadataDrivenCopyTask_oem_20240604"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-06-04T09:03:52Z"
 			},
 			"dependsOn": []
 		}
