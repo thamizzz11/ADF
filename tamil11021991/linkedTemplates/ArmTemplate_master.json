@@ -27,6 +27,14 @@
 			"type": "string",
 			"defaultValue": "tamil"
 		},
+		"LS_RESTAPI_Users_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://reqres.in/api/users"
+		},
+		"RestService1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.first.org/data/v1/countries"
+		},
 		"ls_azuresqldb_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "tamil11021991.database.windows.net"
@@ -137,6 +145,12 @@
 					"LS_Azure_SQLDB_properties_typeProperties_userName": {
 						"value": "[parameters('LS_Azure_SQLDB_properties_typeProperties_userName')]"
 					},
+					"LS_RESTAPI_Users_properties_typeProperties_url": {
+						"value": "[parameters('LS_RESTAPI_Users_properties_typeProperties_url')]"
+					},
+					"RestService1_properties_typeProperties_url": {
+						"value": "[parameters('RestService1_properties_typeProperties_url')]"
+					},
 					"ls_azuresqldb_properties_typeProperties_server": {
 						"value": "[parameters('ls_azuresqldb_properties_typeProperties_server')]"
 					},
@@ -186,6 +200,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "tamil11021991_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename": {
 						"value": "[parameters('TR_on_blob_create_properties_Insert_log_blob_on_create_parameters_PR_filename')]"
@@ -210,26 +244,6 @@
 					},
 					"TR_on_blob_delete_properties_typeProperties_scope": {
 						"value": "[parameters('TR_on_blob_delete_properties_typeProperties_scope')]"
-					}
-				}
-			},
-			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_1')]"
-			]
-		},
-		{
-			"name": "tamil11021991_ArmTemplate_3",
-			"type": "Microsoft.Resources/deployments",
-			"apiVersion": "2018-02-01",
-			"properties": {
-				"mode": "incremental",
-				"templateLink": {
-					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
-					"contentVersion": "1.0.0.0"
-				},
-				"parameters": {
-					"factoryName": {
-						"value": "[parameters('factoryName')]"
 					},
 					"TR_Copy_file_properties_Copy_file_parameters_SourcePath": {
 						"value": "[parameters('TR_Copy_file_properties_Copy_file_parameters_SourcePath')]"

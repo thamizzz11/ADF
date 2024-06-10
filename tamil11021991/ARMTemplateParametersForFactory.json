@@ -20,6 +20,12 @@
 		"LS_Azure_SQLDB_properties_typeProperties_userName": {
 			"value": "tamil"
 		},
+		"LS_RESTAPI_Users_properties_typeProperties_url": {
+			"value": "https://reqres.in/api/users"
+		},
+		"RestService1_properties_typeProperties_url": {
+			"value": "https://api.first.org/data/v1/countries"
+		},
 		"ls_azuresqldb_properties_typeProperties_server": {
 			"value": "tamil11021991.database.windows.net"
 		},
