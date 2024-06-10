@@ -109,6 +109,7 @@
 			},
 			{
 				"name": "Copy data2",
+				"description": "Get the users info from the RestAPI and load into the table table_json",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
