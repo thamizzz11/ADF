@@ -1,0 +1,21 @@
+{
+	"name": "DS_RESTAPI_output_DB",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_azuresqldb",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"ls_pr_databasename": "tamil11021991db",
+				"ls_pr_username": "tamil",
+				"ls_pr_password": "MayFlower@2024"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "test_json"
+		}
+	}
+}
