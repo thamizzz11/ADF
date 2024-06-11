@@ -253,6 +253,26 @@
 					},
 					"TR_Copy_file_properties_Copy_file_parameters_Source_filename": {
 						"value": "[parameters('TR_Copy_file_properties_Copy_file_parameters_Source_filename')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_2')]"
+			]
+		},
+		{
+			"name": "tamil11021991_ArmTemplate_4",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_4.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath": {
 						"value": "[parameters('TR_copy_file_in_folder_properties_Copy_file_in_folder_parameters_PR_sourcepath')]"
@@ -263,7 +283,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_2')]"
+				"[resourceId('Microsoft.Resources/deployments', 'tamil11021991_ArmTemplate_3')]"
 			]
 		}
 	]

@@ -5668,6 +5668,249 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/WebActivity_GET')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Web_GET_Objects",
+						"type": "WebActivity",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://api.restful-api.dev/objects"
+						}
+					},
+					{
+						"name": "Web_Post_Object",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://api.restful-api.dev/objects",
+							"body": {
+								"name": "Apple 1200",
+								"data": {
+									"year": 2024,
+									"price": 1999,
+									"CPU model": "Intel Core i9",
+									"Hard disk size": "1 TB"
+								}
+							}
+						}
+					},
+					{
+						"name": "Set variable1_ID",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Web_Post_Object",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ID",
+							"value": {
+								"value": "@activity('Web_Post_Object').output.id",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Web1_Get_One_Object",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Set variable1_ID",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Web1_Update_Object",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Web1_Get_One_Object",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "PUT",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"type": "Expression"
+							},
+							"body": {
+								"name": "Apple MacBook Pro 16",
+								"data": {
+									"year": 2019,
+									"price": 2049.99,
+									"CPU model": "Intel Core i9",
+									"Hard disk size": "1 TB",
+									"color": "silver"
+								}
+							}
+						}
+					},
+					{
+						"name": "Web1_Get_One_Object_AfterUpdate",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Web1_Update_Object",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Web1_Partial_Update",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Web1_Get_One_Object_AfterUpdate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "PATCH",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"type": "Expression"
+							},
+							"body": {
+								"name": "Apple MacBook Pro 16 (Updated Name)"
+							}
+						}
+					},
+					{
+						"name": "Web1_Get_One_Object_After_PartialUpdate",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Web1_Partial_Update",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"ID": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Web_activity')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -7212,6 +7455,32 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_RESTAPI_output_DB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_azuresqldb",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_pr_databasename": "tamil11021991db",
+						"ls_pr_username": "tamil",
+						"ls_pr_password": "MayFlower@2024"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "test_json"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_Thresold_File')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -8302,16 +8571,14 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/WebActivity_GET')]",
+			"name": "[concat(parameters('factoryName'), '/FailActivity_TriggerMail')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Web_GET_Objects",
-						"type": "WebActivity",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
+						"name": "Script1",
+						"type": "Script",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -8321,14 +8588,77 @@
 							"secureInput": false
 						},
 						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_azuresqldb",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"ls_pr_databasename": "tamil11021991db",
+								"ls_pr_username": "tamil",
+								"ls_pr_password": "MayFlower@2024"
+							}
+						},
 						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": "https://api.restful-api.dev/objects"
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "select 1/0"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
 						}
 					},
 					{
-						"name": "Web_Post_Object",
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Script1",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "SendMail",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"Subject": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								},
+								"ErrorMessage": {
+									"value": "@{activity('Script1').Error.Message}",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]",
+				"[concat(variables('factoryId'), '/pipelines/SendMail')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SendMail')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Web1",
 						"type": "WebActivity",
 						"dependsOn": [],
 						"policy": {
@@ -8341,192 +8671,12 @@
 						"userProperties": [],
 						"typeProperties": {
 							"method": "POST",
-							"headers": {},
-							"url": "https://api.restful-api.dev/objects",
-							"body": {
-								"name": "Apple 1200",
-								"data": {
-									"year": 2024,
-									"price": 1999,
-									"CPU model": "Intel Core i9",
-									"Hard disk size": "1 TB"
-								}
-							}
-						}
-					},
-					{
-						"name": "Set variable1_ID",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "Web_Post_Object",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "ID",
-							"value": {
-								"value": "@activity('Web_Post_Object').output.id",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Web1_Get_One_Object",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Set variable1_ID",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": {
-								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Web1_Update_Object",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Web1_Get_One_Object",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "PUT",
-							"headers": {},
-							"url": {
-								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
-								"type": "Expression"
+							"headers": {
+								"content-type": "application/json"
 							},
+							"url": "https://prod-00.eastus.logic.azure.com:443/workflows/dd55834faad54f5bad7cb02e307ed92a/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=RWIDykktiFMwPoKUN9moAljWj873MVVxPRqXeWLEEQc",
 							"body": {
-								"name": "Apple MacBook Pro 16",
-								"data": {
-									"year": 2019,
-									"price": 2049.99,
-									"CPU model": "Intel Core i9",
-									"Hard disk size": "1 TB",
-									"color": "silver"
-								}
-							}
-						}
-					},
-					{
-						"name": "Web1_Get_One_Object_AfterUpdate",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Web1_Update_Object",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": {
-								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Web1_Partial_Update",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Web1_Get_One_Object_AfterUpdate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "PATCH",
-							"headers": {},
-							"url": {
-								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
-								"type": "Expression"
-							},
-							"body": {
-								"name": "Apple MacBook Pro 16 (Updated Name)"
-							}
-						}
-					},
-					{
-						"name": "Web1_Get_One_Object_After_PartialUpdate",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Web1_Partial_Update",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": {
-								"value": "@concat('https://api.restful-api.dev/objects/',variables('ID'))",
+								"value": "{\n\"DataFactoryName\": \"@{pipeline().DataFactory}\",\n\"PipelineName\":\"@{pipeline().Pipeline}\",\n\"Subject\":\"@{pipeline().parameters.Subject}\",\n\"ErrorMessage\":\"@{pipeline().parameters.ErrorMessage}\",\n\"EmailTo\": \"@{pipeline().parameters.EmailTo}\"\n}",
 								"type": "Expression"
 							}
 						}
@@ -8535,40 +8685,23 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"variables": {
-					"ID": {
-						"type": "String"
+				"parameters": {
+					"EmailTo": {
+						"type": "string",
+						"defaultValue": "thamizz11@gmail.com"
+					},
+					"Subject": {
+						"type": "string",
+						"defaultValue": "TestSubject"
+					},
+					"ErrorMessage": {
+						"type": "string",
+						"defaultValue": "FailedADF"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_RESTAPI_output_DB')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_azuresqldb",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"ls_pr_databasename": "tamil11021991db",
-						"ls_pr_username": "tamil",
-						"ls_pr_password": "MayFlower@2024"
-					}
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "test_json"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_azuresqldb')]"
-			]
 		}
 	]
 }
