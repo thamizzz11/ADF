@@ -17,13 +17,7 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "dataflow1_Aggregate",
-						"type": "DataFlowReference",
-						"datasetParameters": {
-							"source1": {
-								"TableName": "Customer",
-								"SchemaName": "SalesLT"
-							}
-						}
+						"type": "DataFlowReference"
 					},
 					"compute": {
 						"coreCount": 8,
