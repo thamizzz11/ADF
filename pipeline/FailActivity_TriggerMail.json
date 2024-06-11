@@ -1,5 +1,5 @@
 {
-	"name": "TriggerMail",
+	"name": "FailActivity_TriggerMail",
 	"properties": {
 		"activities": [
 			{
